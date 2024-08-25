@@ -1,66 +1,41 @@
-## Foundry
+# Account Abstraction
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## What is being taugh in this tutorial
 
-Foundry consists of:
+> 1. Create a basic AA on ethereum
+> 2. Create a basic AA on zksync
+> 3. Deploy, and send a userOp / transcation through them
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## What is Account Abstraction
 
-## Documentation
+Account Abstraction aims to blur the line between these two types of accounts, allowing smart contracts to initiate transactions, define custom logic for transaction validity, and even pay gas fees.
 
-https://book.getfoundry.sh/
+- EOAs (Externally Owned Accounts): These are controlled by private keys and can initiate transactions by paying gas fees.
+- Contract Accounts: These are smart contracts that execute code when triggered by transactions. However, they cannot initiate transactions or pay gas fees on their own.
 
-## Usage
+AA would allow users who does not have (or do not want to use) EOAs to do operation on-chain as long as they got authorized by the smart contract.
 
-### Build
+## Account Abstraction on Ethereum
 
-```shell
-$ forge build
-```
+### Key Components
 
-### Test
+- Alt-Mempool: usually off-chain, users' operations are sent here.
+- Relayers: usually off-chain, A relayer would pick up the operation and submits it to the EntryPoint contract.
+- EntryPoint: This is a on-chain contract, and bundled with the contract account.
+  - validates the operation using the AA contract’s validateUserOp function.
+  - ensures that the necessary gas fees are covered, either by the AA contract itself or by a relayer.
+  - oversees the execution process and ensures all conditions are met.
+- Smart contract account(OpenZeppelin): required to implement `validateUserOp` and `execute` in order to do verification and execution the calldata defined in users' operation. These functions are restricted to the contract owner and the EntryPoint.
+- Target contract
 
-```shell
-$ forge test
-```
+## Account Abstraction on ZkSync
 
-### Format
+### No Alt-Mempool
 
-```shell
-$ forge fmt
-```
+Due to zkSync's layer 2 architecture, transactions are submitted directly to the zkSync network (often via relayers), bypassing the need for a traditional mempool.
 
-### Gas Snapshots
+ZkSync uses a **centralized coordinator** (operated by zkSync itself or its authorized entities) to batch and process transactions.
 
-```shell
-$ forge snapshot
-```
+### BOOTLOADER
 
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+The bootloader acts as the coordinator that handles the submission and processing of User Operations (UserOps), similar to what the Entrypoint contract does in Ethereum’s Account Abstraction (EIP-4337) model.
